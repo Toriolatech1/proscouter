@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ProScouter — Find, Reach, Convert</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --red:#C8202F; --red-dark:#8F1521;
+    --green:#1E5631; --green-dark:#123A20;
+    --bg:#F6F5EF; --surface:#FFFFFF; --ink:#1B1B16;
+    --muted:#726F63; --border:#E2DFD2;
+    --amber:#B7791F; --amber-bg:#FBF0DC;
+    --red-bg:#FBE9E9; --green-bg:#E7F1EA;
+    --radius:10px;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; background:var(--bg); color:var(--ink); font-family:'Inter',sans-serif; line-height:1.5;}
+  h1,h2,h3,.brand-word{font-family:'Space Grotesk',sans-serif;}
+
+  header.topbar{ display:flex; align-items:center; gap:18px; padding:20px clamp(18px,4vw,48px);
+    background:var(--surface); border-bottom:1px solid var(--border); }
+  .mark{width:48px; height:52px; flex:0 0 auto;}
+  .mark svg{width:100%; height:100%; display:block;}
+  .brand-text{display:flex; flex-direction:column; gap:2px;}
+  .brand-word{font-size:24px; font-weight:700; letter-spacing:-0.01em; margin:0;}
+  .brand-word .pro{color:var(--red);} .brand-word .scouter{color:var(--green);}
+  .brand-tagline{font-size:11.5px; letter-spacing:.14em; color:var(--muted); font-weight:600;}
+  .brand-sub{font-size:11px; color:var(--muted); margin-top:1px;}
+  .logout{margin-left:auto; background:none; border:1px solid var(--border); border-radius:8px;
+    padding:8px 14px; font-size:13px; cursor:pointer; color:var(--ink);}
+  .logout:hover{border-color:var(--ink);}
+
+  .tab-rail{display:flex; gap:10px; padding:20px clamp(18px,4vw,48px) 0;}
+  .tab-btn{position:relative; flex:1; max-width:420px; text-align:left; cursor:pointer;
+    background:var(--surface); border:1px solid var(--border); border-bottom:none;
+    border-radius:12px 12px 0 0; padding:16px 20px 14px; font-family:'Space Grotesk',sans-serif;}
+  .tab-btn .n{font-size:11px; letter-spacing:.1em; color:var(--muted); font-weight:600;}
+  .tab-btn .t{font-size:16px; font-weight:700; margin-top:2px;}
+  .tab-btn .d{font-size:12px; color:var(--muted); font-weight:400; font-family:'Inter',sans-serif; margin-top:3px;}
+  .tab-btn.active{background:var(--ink); border-color:var(--ink);}
+  .tab-btn.active .n, .tab-btn.active .d{color:#cfcdc2;} .tab-btn.active .t{color:#fff;}
+  .tab-btn:not(.active):hover{border-color:#c9c6b6;}
+  .tab-btn::after{content:""; position:absolute; left:0; right:0; bottom:-1px; height:3px;}
+  .tab-btn#tabFinderBtn::after{background:var(--red);}
+  .tab-btn#tabVerifyBtn::after{background:var(--green);}
+  .tab-btn:not(.active)::after{opacity:0;}
+
+  main{background:var(--ink);}
+  .panel{display:none; background:var(--surface); padding:clamp(18px,4vw,48px);}
+  .panel.active{display:block;}
+
+  .grid{display:grid; grid-template-columns:1.1fr 1fr; gap:28px;}
+  @media(max-width:900px){.grid{grid-template-columns:1fr;}}
+  .card{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:20px;}
+  .card + .card{margin-top:20px;}
+  label.field-label{display:block; font-size:12.5px; font-weight:600; margin-bottom:6px;}
+  textarea, input[type=text]{width:100%; border:1px solid var(--border); border-radius:8px; padding:10px 12px;
+    font-family:'Inter',monospace; font-size:13px; color:var(--ink); background:#FCFBF8; resize:vertical;}
+  textarea:focus, input:focus{outline:2px solid var(--green); outline-offset:1px;}
+  .row{display:flex; align-items:center; gap:10px; flex-wrap:wrap;}
+  .between{justify-content:space-between;}
+  .checks{display:flex; flex-direction:column; gap:8px; margin:14px 0;}
+  .checks label{display:flex; align-items:center; gap:8px; font-size:13.5px;}
+  .counter{font-size:12.5px; color:var(--muted); font-variant-numeric:tabular-nums;}
+  .counter.over{color:var(--red); font-weight:600;}
+
+  button.primary{background:var(--green); color:#fff; border:none; border-radius:8px; padding:11px 20px;
+    font-weight:600; font-size:14px; cursor:pointer; font-family:'Space Grotesk',sans-serif;}
+  button.primary:hover{background:var(--green-dark);}
+  button.primary:disabled{background:#B9BDB5; cursor:not-allowed;}
+  a.ghost, button.ghost{background:transparent; color:var(--ink); border:1px solid var(--border); border-radius:8px;
+    padding:10px 16px; font-weight:600; font-size:13.5px; cursor:pointer; text-decoration:none; display:inline-block;}
+  a.ghost:hover, button.ghost:hover{border-color:var(--ink);}
+  button.chip{background:var(--surface); border:1px solid var(--border); border-radius:20px; padding:6px 14px;
+    font-size:12.5px; font-weight:600; color:var(--muted); cursor:pointer;}
+  button.chip.active{background:var(--ink); color:#fff; border-color:var(--ink);}
+
+  .progress-wrap{margin-top:14px;}
+  .progress-bar{height:8px; border-radius:5px; background:#EDEBE1; overflow:hidden;}
+  .progress-bar > div{height:100%; width:0%; background:linear-gradient(90deg,var(--red),var(--green)); transition:width .2s ease;}
+
+  .stat-row{display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-top:16px;}
+  @media(max-width:700px){.stat-row{grid-template-columns:repeat(2,1fr);}}
+  .stat{background:#FCFBF8; border:1px solid var(--border); border-radius:8px; padding:12px 14px;}
+  .stat .v{font-family:'Space Grotesk',sans-serif; font-size:22px; font-weight:700;}
+  .stat .l{font-size:11.5px; color:var(--muted); margin-top:2px;}
+
+  table{width:100%; border-collapse:collapse; font-size:13px; margin-top:14px;}
+  thead th{text-align:left; font-size:11px; letter-spacing:.04em; color:var(--muted); border-bottom:1px solid var(--border); padding:8px 10px; font-weight:600;}
+  tbody td{padding:9px 10px; border-bottom:1px solid #EFEDE3; vertical-align:top;}
+  tbody tr:hover{background:#FBFAF6;}
+  .badge{display:inline-block; padding:2px 9px; border-radius:20px; font-size:11px; font-weight:700;}
+  .badge.valid{background:var(--green-bg); color:var(--green-dark);}
+  .badge.risky{background:var(--amber-bg); color:var(--amber);}
+  .badge.invalid{background:var(--red-bg); color:var(--red-dark);}
+  .badge.found{background:var(--green-bg); color:var(--green-dark);}
+  .badge.none{background:#EFEDE3; color:var(--muted);}
+  .mono{font-family:'Inter',monospace; font-size:12.3px;}
+
+  .table-actions{display:flex; justify-content:space-between; align-items:center; margin-top:12px; flex-wrap:wrap; gap:10px;}
+  .pager{display:flex; align-items:center; gap:10px; font-size:12.5px; color:var(--muted);}
+  .pager button{background:none; border:1px solid var(--border); border-radius:6px; padding:4px 10px; cursor:pointer;}
+  .pager button:disabled{opacity:.4; cursor:default;}
+
+  .divider{border:none; border-top:1px solid var(--border); margin:34px 0;}
+  .section-head{display:flex; align-items:baseline; gap:10px; margin-bottom:4px;}
+  .section-head h2{font-size:19px; margin:0;}
+  .section-head span{font-size:12px; color:var(--muted);}
+
+  .meter{height:10px; border-radius:6px; background:#EDEBE1; overflow:hidden; margin-top:6px;}
+  .meter > div{height:100%;}
+  .split{display:flex; height:16px; border-radius:6px; overflow:hidden; margin-top:8px;}
+  .split div:nth-child(1){background:var(--green);}
+  .split div:nth-child(2){background:#D9A441;}
+  .split div:nth-child(3){background:var(--red);}
+  .legend{display:flex; gap:16px; font-size:12px; color:var(--muted); margin-top:6px;}
+  .legend span{display:inline-flex; align-items:center; gap:5px;}
+  .dot{width:8px; height:8px; border-radius:50%; display:inline-block;}
+
+  .issue-list{margin:10px 0 0; padding:0; list-style:none; font-size:13px;}
+  .issue-list li{padding:6px 0; border-bottom:1px solid #EFEDE3; display:flex; gap:8px;}
+  .issue-list li:last-child{border-bottom:none;}
+
+  .toggle-row{display:flex; align-items:center; gap:12px; margin-top:18px;}
+  .switch{position:relative; width:42px; height:24px; flex:0 0 auto;}
+  .switch input{opacity:0; width:0; height:0;}
+  .slider{position:absolute; inset:0; background:#D8D5C7; border-radius:20px; cursor:pointer; transition:.15s;}
+  .slider::before{content:""; position:absolute; height:18px; width:18px; left:3px; top:3px; background:#fff; border-radius:50%; transition:.15s;}
+  input:checked + .slider{background:var(--green);}
+  input:checked + .slider::before{transform:translateX(18px);}
+  .soon-badge{display:none; background:var(--red-bg); color:var(--red-dark); font-size:11.5px; font-weight:700; padding:3px 10px; border-radius:20px;}
+  .soon-badge.show{display:inline-block;}
+
+  .footnote{font-size:12px; color:var(--muted); margin-top:8px;}
+  .error-msg{color:var(--red-dark); background:var(--red-bg); border-radius:8px; padding:8px 12px; font-size:13px; margin-top:10px; display:none;}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="mark">
+    <svg viewBox="0 0 120 130" xmlns="http://www.w3.org/2000/svg">
+      <path d="M10 10 L95 10 C112 10 112 62 95 62 L45 62 L45 120 L10 90 Z" fill="url(#gRed)"/>
+      <path d="M10 10 L10 90 L45 120 L45 62 L10 10 Z" fill="url(#gGreen)"/>
+      <circle cx="55" cy="45" r="26" fill="#fff"/>
+      <circle cx="55" cy="45" r="21" fill="none" stroke="#1E5631" stroke-width="4"/>
+      <rect x="40" y="35" width="30" height="20" rx="2" fill="#1E5631"/>
+      <path d="M41 36 L55 47 L69 36" stroke="#fff" stroke-width="2.5" fill="none"/>
+      <defs>
+        <linearGradient id="gRed" x1="10" y1="10" x2="112" y2="62" gradientUnits="userSpaceOnUse">
+          <stop stop-color="#D6323F"/><stop offset="1" stop-color="#8F1521"/>
+        </linearGradient>
+        <linearGradient id="gGreen" x1="10" y1="10" x2="45" y2="120" gradientUnits="userSpaceOnUse">
+          <stop stop-color="#2C7A4B"/><stop offset="1" stop-color="#123A20"/>
+        </linearGradient>
+      </defs>
+    </svg>
+  </div>
+  <div class="brand-text">
+    <p class="brand-word"><span class="pro">Pro</span><span class="scouter">Scouter</span></p>
+    <div class="brand-tagline">FIND | REACH | CONVERT</div>
+    <div class="brand-sub">Smarter outreach. Bigger opportunities.</div>
+  </div>
+  <button class="logout" onclick="logout()">Log out</button>
+</header>
+
+<div class="tab-rail">
+  <button class="tab-btn active" id="tabFinderBtn" onclick="showTab('finder')">
+    <div class="n">SECTION 1</div><div class="t">Email Finder</div>
+    <div class="d">Turn store URLs into verified contact emails</div>
+  </button>
+  <button class="tab-btn" id="tabVerifyBtn" onclick="showTab('verify')">
+    <div class="n">SECTION 2</div><div class="t">Verify &amp; Reach</div>
+    <div class="d">Clean your list, check placement, send with confidence</div>
+  </button>
+</div>
+
+<main>
+<!-- ================= SECTION 1: FINDER ================= -->
+<section class="panel active" id="finder">
+  <div class="grid">
+    <div class="card">
+      <label class="field-label">Store / website URLs — one per line, up to 10,000</label>
+      <textarea id="urlInput" rows="10" placeholder="https://store1.com&#10;https://store2.myshopify.com&#10;https://store3.com"></textarea>
+      <div class="row between" style="margin-top:8px;">
+        <span class="counter" id="urlCounter">0 / 10,000 URLs</span>
+        <label class="ghost" style="cursor:pointer;">Upload .csv / .txt
+          <input type="file" id="urlFile" accept=".csv,.txt" style="display:none;">
+        </label>
+      </div>
+      <div class="checks">
+        <label><input type="checkbox" id="cScanPrivacy" checked> Also scan Privacy Policy page</label>
+        <label><input type="checkbox" id="cScanCheckout" checked> Also scan Checkout / Terms page</label>
+        <label><input type="checkbox" id="cScanContact" checked> Also scan Contact / About page</label>
+      </div>
+      <button class="primary" id="runFinderBtn" onclick="runFinder()">Extract emails</button>
+      <div class="error-msg" id="finderError"></div>
+
+      <div class="progress-wrap" id="finderProgressWrap" style="display:none;">
+        <div class="row between"><span class="footnote" id="finderProgressLabel">Crawling…</span><span class="footnote" id="finderProgressPct">0%</span></div>
+        <div class="progress-bar"><div id="finderProgressBar"></div></div>
+      </div>
+
+      <div class="stat-row" id="finderStats" style="display:none;">
+        <div class="stat"><div class="v" id="statTotal">0</div><div class="l">URLs processed</div></div>
+        <div class="stat"><div class="v" id="statFound">0</div><div class="l">Emails found</div></div>
+        <div class="stat"><div class="v" id="statRate">0%</div><div class="l">Hit rate</div></div>
+        <div class="stat"><div class="v" id="statNone">0</div><div class="l">No email found</div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3 style="margin-top:0;">What gets pulled from each site</h3>
+      <p class="footnote" style="font-size:13px; color:var(--ink);">For every URL, ProScouter checks the homepage first, then falls back to the pages you enabled on the left:</p>
+      <ol style="font-size:13px; padding-left:18px; color:var(--ink);">
+        <li>Homepage &amp; footer</li>
+        <li>Contact / About page</li>
+        <li>Privacy Policy page</li>
+        <li>Checkout / Terms page</li>
+      </ol>
+      <p class="footnote">Sites are crawled 15 at a time. A run of 10,000 URLs typically finishes in well under an hour, depending on how many sites are slow to respond.</p>
+    </div>
+  </div>
+
+  <div class="card" id="finderResultsCard" style="display:none; margin-top:20px;">
+    <div class="row between">
+      <h3 style="margin:0;">Results</h3>
+      <div class="row">
+        <a class="ghost" id="finderExportXlsx" href="#" target="_blank">Export .xlsx</a>
+        <a class="ghost" id="finderExportCsv" href="#" target="_blank">Export .csv</a>
+      </div>
+    </div>
+    <table>
+      <thead><tr><th>Website</th><th>Store name</th><th>Email</th><th>Source</th><th>Status</th></tr></thead>
+      <tbody id="finderTableBody"></tbody>
+    </table>
+    <div class="table-actions">
+      <span class="footnote" id="finderPageInfo"></span>
+      <div class="pager">
+        <button onclick="finderPage(-1)" id="finderPrev">← Prev</button>
+        <button onclick="finderPage(1)" id="finderNext">Next →</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= SECTION 2: VERIFY & REACH ================= -->
+<section class="panel" id="verify">
+  <div class="grid">
+    <div class="card">
+      <label class="field-label">Email list — one per line, up to 10,000</label>
+      <textarea id="emailInput" rows="10" placeholder="owner@store1.com&#10;info@store2.com&#10;hello@store3.com"></textarea>
+      <div class="row between" style="margin-top:8px;">
+        <span class="counter" id="emailCounter">0 / 10,000 emails</span>
+        <label class="ghost" style="cursor:pointer;">Upload .csv / .txt
+          <input type="file" id="emailFile" accept=".csv,.txt" style="display:none;">
+        </label>
+      </div>
+      <button class="primary" id="runVerifyBtn" onclick="runVerify()">Clean &amp; verify list</button>
+      <div class="error-msg" id="verifyError"></div>
+
+      <div class="progress-wrap" id="verifyProgressWrap" style="display:none;">
+        <div class="row between"><span class="footnote" id="verifyProgressLabel">Checking syntax, MX records &amp; duplicates…</span><span class="footnote" id="verifyProgressPct">0%</span></div>
+        <div class="progress-bar"><div id="verifyProgressBar"></div></div>
+      </div>
+
+      <div class="stat-row" id="verifyStats" style="display:none;">
+        <div class="stat"><div class="v" id="vTotal">0</div><div class="l">Total checked</div></div>
+        <div class="stat"><div class="v" id="vValid" style="color:var(--green)">0</div><div class="l">Valid</div></div>
+        <div class="stat"><div class="v" id="vRisky" style="color:var(--amber)">0</div><div class="l">Risky / role-based</div></div>
+        <div class="stat"><div class="v" id="vInvalid" style="color:var(--red)">0</div><div class="l">Invalid</div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3 style="margin-top:0;">What "verified" means here</h3>
+      <ul style="font-size:13px; padding-left:18px; color:var(--ink);">
+        <li>Real syntax check</li>
+        <li>Real MX record lookup — confirms the domain can receive mail</li>
+        <li>Disposable-provider and duplicate detection</li>
+        <li>Role-based address flagging (admin@, noreply@)</li>
+      </ul>
+      <p class="footnote">This confirms the <b>domain</b> can receive mail. Confirming the exact <b>mailbox</b> exists needs a paid SMTP-probe API (ZeroBounce, NeverBounce, Kickbox) — see the README for where to plug one in.</p>
+    </div>
+  </div>
+
+  <div class="card" id="verifyResultsCard" style="display:none; margin-top:20px;">
+    <div class="row between">
+      <h3 style="margin:0;">Cleaned list</h3>
+      <div class="row">
+        <a class="ghost" id="verifyExportXlsx" href="#" target="_blank">Export .xlsx</a>
+        <a class="ghost" id="verifyExportCsv" href="#" target="_blank">Export .csv</a>
+      </div>
+    </div>
+    <div class="row" style="margin-top:10px;">
+      <button class="chip active" data-filter="all" onclick="setVerifyFilter('all')">All</button>
+      <button class="chip" data-filter="valid" onclick="setVerifyFilter('valid')">Valid</button>
+      <button class="chip" data-filter="risky" onclick="setVerifyFilter('risky')">Risky</button>
+      <button class="chip" data-filter="invalid" onclick="setVerifyFilter('invalid')">Invalid</button>
+    </div>
+    <table>
+      <thead><tr><th>Email</th><th>Status</th><th>Reason</th><th>Domain</th></tr></thead>
+      <tbody id="verifyTableBody"></tbody>
+    </table>
+    <div class="table-actions">
+      <span class="footnote" id="verifyPageInfo"></span>
+      <div class="pager">
+        <button onclick="verifyPage(-1)" id="verifyPrev">← Prev</button>
+        <button onclick="verifyPage(1)" id="verifyNext">Next →</button>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <div class="section-head"><h2>Inbox placement &amp; content check</h2><span>runs locally in your browser — no data leaves the page</span></div>
+  <div class="grid">
+    <div class="card">
+      <label class="field-label">Subject line</label>
+      <input type="text" id="dSubject" placeholder="Quick question about {{store_name}}">
+      <label class="field-label" style="margin-top:14px;">Email body</label>
+      <textarea id="dBody" rows="8" placeholder="Paste the outreach message you're planning to send…"></textarea>
+      <button class="primary" style="margin-top:14px;" onclick="runDeliverability()">Check placement</button>
+
+      <div class="toggle-row">
+        <label class="switch">
+          <input type="checkbox" id="rephraseToggle" onchange="toggleRephrase()">
+          <span class="slider"></span>
+        </label>
+        <div>
+          <div style="font-size:13.5px; font-weight:600;">Auto-rephrase content with AI</div>
+          <div class="footnote">Rewrites flagged lines automatically to dodge spam filters</div>
+        </div>
+        <span class="soon-badge" id="soonBadge">Coming soon</span>
+      </div>
+    </div>
+
+    <div class="card" id="deliverabilityCard" style="display:none;">
+      <h3 style="margin-top:0;">Placement estimate</h3>
+      <div class="row between"><span class="footnote">Deliverability score</span><span class="mono" id="dScoreLabel">—</span></div>
+      <div class="meter"><div id="dScoreBar"></div></div>
+      <div class="footnote" style="margin-top:16px;">Predicted landing spot</div>
+      <div class="split"><div id="splitInbox"></div><div id="splitPromo"></div><div id="splitSpam"></div></div>
+      <div class="legend">
+        <span><i class="dot" style="background:var(--green)"></i>Inbox</span>
+        <span><i class="dot" style="background:#D9A441"></i>Promotions</span>
+        <span><i class="dot" style="background:var(--red)"></i>Spam</span>
+      </div>
+      <div class="footnote" style="margin-top:16px;">Flagged issues</div>
+      <ul class="issue-list" id="issueList"></ul>
+      <p class="footnote" id="noIssues" style="display:none;">No red flags found in this draft.</p>
+    </div>
+  </div>
+</section>
+</main>
+
+<script>
+/* ---------------- shared ---------------- */
+function showTab(name){
+  document.getElementById('finder').classList.toggle('active', name==='finder');
+  document.getElementById('verify').classList.toggle('active', name==='verify');
+  document.getElementById('tabFinderBtn').classList.toggle('active', name==='finder');
+  document.getElementById('tabVerifyBtn').classList.toggle('active', name==='verify');
+}
+function parseLines(text){ return text.split('\n').map(s=>s.trim()).filter(Boolean); }
+function loadFile(inputEl, targetTextareaEl){
+  inputEl.addEventListener('change', function(){
+    const f = this.files[0]; if(!f) return;
+    const reader = new FileReader();
+    reader.onload = e => { targetTextareaEl.value = e.target.result; targetTextareaEl.dispatchEvent(new Event('input')); };
+    reader.readAsText(f);
+  });
+}
+function sleep(ms){ return new Promise(r=>setTimeout(r,ms)); }
+async function logout(){ await fetch('/logout', {method:'POST'}); window.location.href = '/login'; }
+
+async function api(url, opts){
+  const res = await fetch(url, opts);
+  if (res.status === 401) { window.location.href = '/login'; throw new Error('Not authenticated'); }
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Request failed');
+  return data;
+}
+
+const PAGE_SIZE = 25;
+
+/* ---------------- SECTION 1: FINDER ---------------- */
+const urlInput = document.getElementById('urlInput');
+const urlCounter = document.getElementById('urlCounter');
+loadFile(document.getElementById('urlFile'), urlInput);
+urlInput.addEventListener('input', ()=>{
+  const n = parseLines(urlInput.value).length;
+  urlCounter.textContent = n.toLocaleString() + ' / 10,000 URLs';
+  urlCounter.classList.toggle('over', n>10000);
+});
+
+let finderJobId = null;
+let finderPageIdx = 0;
+
+async function runFinder(){
+  const urls = parseLines(urlInput.value).slice(0,10000);
+  const errEl = document.getElementById('finderError'); errEl.style.display='none';
+  if(urls.length===0){ errEl.textContent='Add at least one URL first.'; errEl.style.display='block'; return; }
+
+  document.getElementById('runFinderBtn').disabled = true;
+  document.getElementById('finderResultsCard').style.display='none';
+  document.getElementById('finderProgressWrap').style.display='block';
+  document.getElementById('finderProgressLabel').textContent = 'Crawling…';
+
+  try{
+    const { jobId } = await api('/api/finder/jobs', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        urls,
+        scanPrivacy: document.getElementById('cScanPrivacy').checked,
+        scanCheckout: document.getElementById('cScanCheckout').checked,
+        scanContact: document.getElementById('cScanContact').checked
+      })
+    });
+    finderJobId = jobId;
+    await pollFinder(jobId);
+  }catch(e){
+    errEl.textContent = e.message; errEl.style.display='block';
+    document.getElementById('runFinderBtn').disabled = false;
+  }
+}
+
+async function pollFinder(jobId){
+  while(true){
+    const s = await api(`/api/finder/jobs/${jobId}`);
+    const pct = s.total ? Math.round((s.processed/s.total)*100) : 0;
+    document.getElementById('finderProgressBar').style.width = pct+'%';
+    document.getElementById('finderProgressPct').textContent = pct+'%';
+
+    if(s.status === 'done' || s.status === 'error'){
+      document.getElementById('runFinderBtn').disabled = false;
+      if(s.status === 'error'){
+        const errEl = document.getElementById('finderError');
+        errEl.textContent = s.error || 'The job failed.'; errEl.style.display='block';
+        return;
+      }
+      document.getElementById('finderProgressLabel').textContent = 'Done';
+      document.getElementById('finderStats').style.display='grid';
+      document.getElementById('statTotal').textContent = s.total.toLocaleString();
+      document.getElementById('statFound').textContent = s.found.toLocaleString();
+      document.getElementById('statRate').textContent = Math.round(s.found/s.total*100)+'%';
+      document.getElementById('statNone').textContent = s.notFound.toLocaleString();
+      document.getElementById('finderExportXlsx').href = `/api/finder/jobs/${jobId}/export.xlsx`;
+      document.getElementById('finderExportCsv').href = `/api/finder/jobs/${jobId}/export.csv`;
+      finderPageIdx = 0;
+      await renderFinderPage();
+      document.getElementById('finderResultsCard').style.display='block';
+      return;
+    }
+    await sleep(800);
+  }
+}
+
+async function renderFinderPage(){
+  if(!finderJobId) return;
+  const data = await api(`/api/finder/jobs/${finderJobId}/results?page=${finderPageIdx+1}&pageSize=${PAGE_SIZE}`);
+  const tbody = document.getElementById('finderTableBody');
+  tbody.innerHTML = data.rows.map(r=>`
+    <tr>
+      <td class="mono">${r.website}</td>
+      <td>${r.storeName}</td>
+      <td class="mono">${r.email || '—'}</td>
+      <td>${r.source || '—'}</td>
+      <td><span class="badge ${r.status==='Found'?'found':'none'}">${r.status}</span></td>
+    </tr>`).join('');
+  const totalPages = Math.max(1, Math.ceil(data.total/PAGE_SIZE));
+  document.getElementById('finderPageInfo').textContent = `Page ${finderPageIdx+1} of ${totalPages} — ${data.total.toLocaleString()} rows total`;
+  document.getElementById('finderPrev').disabled = finderPageIdx===0;
+  document.getElementById('finderNext').disabled = finderPageIdx>=totalPages-1;
+}
+function finderPage(dir){ finderPageIdx = Math.max(0, finderPageIdx+dir); renderFinderPage(); }
+
+/* ---------------- SECTION 2: VERIFY ---------------- */
+const emailInput = document.getElementById('emailInput');
+const emailCounter = document.getElementById('emailCounter');
+loadFile(document.getElementById('emailFile'), emailInput);
+emailInput.addEventListener('input', ()=>{
+  const n = parseLines(emailInput.value).length;
+  emailCounter.textContent = n.toLocaleString() + ' / 10,000 emails';
+  emailCounter.classList.toggle('over', n>10000);
+});
+
+let verifyJobId = null;
+let verifyPageIdx = 0;
+let verifyFilter = 'all';
+
+async function runVerify(){
+  const emails = parseLines(emailInput.value).slice(0,10000);
+  const errEl = document.getElementById('verifyError'); errEl.style.display='none';
+  if(emails.length===0){ errEl.textContent='Add at least one email first.'; errEl.style.display='block'; return; }
+
+  document.getElementById('runVerifyBtn').disabled = true;
+  document.getElementById('verifyResultsCard').style.display='none';
+  document.getElementById('verifyProgressWrap').style.display='block';
+  document.getElementById('verifyProgressLabel').textContent = 'Checking syntax, MX records & duplicates…';
+
+  try{
+    const { jobId } = await api('/api/verify/jobs', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ emails })
+    });
+    verifyJobId = jobId;
+    await pollVerify(jobId);
+  }catch(e){
+    errEl.textContent = e.message; errEl.style.display='block';
+    document.getElementById('runVerifyBtn').disabled = false;
+  }
+}
+
+async function pollVerify(jobId){
+  while(true){
+    const s = await api(`/api/verify/jobs/${jobId}`);
+    const pct = s.total ? Math.round((s.processed/s.total)*100) : 0;
+    document.getElementById('verifyProgressBar').style.width = pct+'%';
+    document.getElementById('verifyProgressPct').textContent = pct+'%';
+
+    if(s.status === 'done' || s.status === 'error'){
+      document.getElementById('runVerifyBtn').disabled = false;
+      if(s.status === 'error'){
+        const errEl = document.getElementById('verifyError');
+        errEl.textContent = s.error || 'The job failed.'; errEl.style.display='block';
+        return;
+      }
+      document.getElementById('verifyProgressLabel').textContent = 'Done';
+      document.getElementById('verifyStats').style.display='grid';
+      document.getElementById('vTotal').textContent = s.total.toLocaleString();
+      document.getElementById('vValid').textContent = s.counts.valid.toLocaleString();
+      document.getElementById('vRisky').textContent = s.counts.risky.toLocaleString();
+      document.getElementById('vInvalid').textContent = s.counts.invalid.toLocaleString();
+      verifyPageIdx = 0; verifyFilter = 'all';
+      document.querySelectorAll('.chip').forEach(c=>c.classList.toggle('active', c.dataset.filter==='all'));
+      updateVerifyExportLinks();
+      await renderVerifyPage();
+      document.getElementById('verifyResultsCard').style.display='block';
+      return;
+    }
+    await sleep(800);
+  }
+}
+
+function updateVerifyExportLinks(){
+  document.getElementById('verifyExportXlsx').href = `/api/verify/jobs/${verifyJobId}/export.xlsx?filter=${verifyFilter}`;
+  document.getElementById('verifyExportCsv').href = `/api/verify/jobs/${verifyJobId}/export.csv?filter=${verifyFilter}`;
+}
+
+function setVerifyFilter(f){
+  verifyFilter = f; verifyPageIdx = 0;
+  document.querySelectorAll('.chip').forEach(c=>c.classList.toggle('active', c.dataset.filter===f));
+  updateVerifyExportLinks();
+  renderVerifyPage();
+}
+
+async function renderVerifyPage(){
+  if(!verifyJobId) return;
+  const data = await api(`/api/verify/jobs/${verifyJobId}/results?page=${verifyPageIdx+1}&pageSize=${PAGE_SIZE}&filter=${verifyFilter}`);
+  const tbody = document.getElementById('verifyTableBody');
+  tbody.innerHTML = data.rows.map(r=>`
+    <tr>
+      <td class="mono">${r.email}</td>
+      <td><span class="badge ${r.status}">${r.status}</span></td>
+      <td>${r.reason}</td>
+      <td class="mono">${r.domain || '—'}</td>
+    </tr>`).join('');
+  const totalPages = Math.max(1, Math.ceil(data.total/PAGE_SIZE));
+  document.getElementById('verifyPageInfo').textContent = `Page ${verifyPageIdx+1} of ${totalPages} — ${data.total.toLocaleString()} rows`;
+  document.getElementById('verifyPrev').disabled = verifyPageIdx===0;
+  document.getElementById('verifyNext').disabled = verifyPageIdx>=totalPages-1;
+}
+function verifyPage(dir){ verifyPageIdx = Math.max(0, verifyPageIdx+dir); renderVerifyPage(); }
+
+/* ---------------- Deliverability checker (client-side, no backend needed) ---------------- */
+const SPAM_PHRASES = ['free money','act now','click here','100% free','risk-free','no obligation',
+  'limited time','buy now','cash bonus','congratulations','you have been selected','earn money',
+  'work from home','once in a lifetime','guarantee','no credit check','winner','urgent','dear friend',
+  'unsubscribe now','viagra','lowest price','special promotion','cheap','apply now'];
+
+function runDeliverability(){
+  const subject = document.getElementById('dSubject').value || '';
+  const body = document.getElementById('dBody').value || '';
+  const full = (subject+' '+body).toLowerCase();
+  let penalty = 0; const issues = [];
+
+  const hits = SPAM_PHRASES.filter(p=>full.includes(p));
+  if(hits.length){ penalty += hits.length*8; issues.push(`Spam-trigger phrases found: "${hits.join('", "')}"`); }
+
+  const capsWords = subject.split(/\s+/).filter(w=>w.length>2 && w===w.toUpperCase());
+  if(capsWords.length>1){ penalty += 10; issues.push('Subject line has multiple ALL-CAPS words'); }
+
+  const exclaims = (subject.match(/!/g)||[]).length + (body.match(/!/g)||[]).length;
+  if(exclaims>2){ penalty += 8; issues.push(`${exclaims} exclamation marks — trims credibility with spam filters`); }
+
+  const linkCount = (body.match(/https?:\/\//g)||[]).length;
+  if(linkCount>3){ penalty += 10; issues.push(`${linkCount} links in the body — filters flag link-heavy emails`); }
+
+  if(!/unsubscribe/i.test(body) && body.length>0){ penalty += 6; issues.push('No unsubscribe / opt-out line found'); }
+  if(!/\{\{.*?\}\}|\[.*?\]/.test(subject+body) && body.length>0){ issues.push('No personalization token detected (e.g. {{store_name}}) — generic mail is filtered more aggressively'); }
+  if(body.trim().length < 40 && body.length>0){ penalty += 5; issues.push('Body is very short — can read as low-effort / templated'); }
+
+  const score = Math.max(5, Math.min(97, 92 - penalty));
+  document.getElementById('deliverabilityCard').style.display='block';
+  document.getElementById('dScoreLabel').textContent = score + ' / 100';
+  const bar = document.getElementById('dScoreBar');
+  bar.style.width = score+'%';
+  bar.style.background = score>=75 ? 'var(--green)' : score>=50 ? '#D9A441' : 'var(--red)';
+
+  let inbox, promo, spam;
+  if(score>=80){ inbox=85; promo=10; spam=5; }
+  else if(score>=60){ inbox=62; promo=23; spam=15; }
+  else if(score>=40){ inbox=40; promo=25; spam=35; }
+  else { inbox=22; promo=20; spam=58; }
+  document.getElementById('splitInbox').style.width = inbox+'%';
+  document.getElementById('splitPromo').style.width = promo+'%';
+  document.getElementById('splitSpam').style.width = spam+'%';
+
+  const list = document.getElementById('issueList');
+  list.innerHTML = issues.map(i=>`<li>⚠️ ${i}</li>`).join('');
+  document.getElementById('noIssues').style.display = issues.length? 'none':'block';
+}
+
+function toggleRephrase(){
+  const on = document.getElementById('rephraseToggle').checked;
+  document.getElementById('soonBadge').classList.toggle('show', on);
+}
+</script>
+</body>
+</html>
